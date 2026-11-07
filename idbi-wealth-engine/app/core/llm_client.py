@@ -111,7 +111,32 @@ class LLMClient:
                     "content": json.dumps(serializable_result),
                 })
 
-        raise Exception(f"Maximum iterations ({max_iterations}) exceeded in tool calling loop.")
+        # Hit the iteration cap without the model settling on a final answer
+        # (common when the knowledge base lacks the exact fact the model keeps
+        # searching for). Instead of failing the request with a 500, make one
+        # final call with NO tools so the model MUST produce a text answer from
+        # whatever it has already gathered.
+        print(f"[{get_timestamp()}] [LLM] Max iterations ({max_iterations}) reached; forcing a final answer without tools")
+        conversation.append({
+            "role": "system",
+            "content": (
+                "You have gathered enough information. Do NOT call any more tools. "
+                "Answer the customer now in plain language using what you already know. "
+                "If you could not find an exact figure (e.g. a precise interest rate), "
+                "give the general range you did find and suggest checking the IDBI website "
+                "or nearest branch for the exact current number."
+            ),
+        })
+        final = self.client.chat.completions.create(
+            model=self.model, messages=conversation, temperature=temperature,
+            max_tokens=max_tokens, stream=False
+        )
+        return {
+            "content": final.choices[0].message.content or "",
+            "tool_calls_made": tool_calls_made,
+            "iterations": max_iterations,
+            "finish_reason": "forced_final_answer",
+        }
 
     def get_usage_info(self) -> Dict[str, Any]:
         return {"provider": "AIMLAPI", "model": self.model, "max_tokens": MAX_TOKENS, "temperature": TEMPERATURE}

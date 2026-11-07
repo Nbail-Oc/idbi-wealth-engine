@@ -102,7 +102,8 @@ async def get_recommendations(
     query = f"investment options interest rates {risk_category.lower()} risk"
     results = bm25_retriever.retrieve(query, top_k=5)
     knowledge_context = bm25_retriever.format_context(results, max_chunks=3)
-    sources = list(set([r['source'] for r in results]))
+    # Chunks carry title/url rather than a 'source' key; read defensively.
+    sources = list({(r.get("source") or r.get("title") or r.get("url") or "unknown") for r in results})
     
     # 4. Generate recommendations using LLM
     financial = profile.get('financial_summary', {})

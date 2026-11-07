@@ -63,7 +63,7 @@ if (-not (Test-Path "$frontendPath\node_modules")) {
 
 # Start Backend (Listening on all interfaces via host 0.0.0.0)
 Write-Host "Starting Backend API in a new window..." -ForegroundColor Cyan
-$backendProc = Start-Process cmd.exe -ArgumentList "/k title IDBI Backend API && cd /d `"$projectPath`" && `"$pythonCmd`" -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000" -PassThru
+$backendProc = Start-Process cmd.exe -ArgumentList "/k title IDBI Backend API && cd /d `"$projectPath`" && chcp 65001 >nul && set `"PYTHONUTF8=1`" && set `"PYTHONIOENCODING=utf-8`" && `"$pythonCmd`" -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000" -PassThru
 
 # Wait 3 seconds for backend to start up
 Write-Host "Waiting for Backend to initialize..." -ForegroundColor Gray

@@ -137,11 +137,16 @@ class BM25Retriever:
         
         context_parts = []
         for i, result in enumerate(results[:max_chunks], 1):
+            # Chunks may not carry a 'source' key (they have title/url instead),
+            # so read every field defensively to avoid KeyError.
+            source = result.get("source") or result.get("title") or result.get("url") or "unknown"
+            section = result.get("section", "")
+            text = result.get("text", "")
             context_parts.append(
-                f"[Source {i}: {result['source']} - {result['section']}]\n"
-                f"{result['text']}\n"
+                f"[Source {i}: {source} - {section}]\n"
+                f"{text}\n"
             )
-        
+
         return "\n---\n\n".join(context_parts)
 
 

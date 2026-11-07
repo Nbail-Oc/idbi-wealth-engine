@@ -4,6 +4,18 @@ API-first AI platform for personalized wealth advisory.
 """
 
 import os
+import sys
+
+# Force UTF-8 on stdout/stderr so emoji in print() (e.g. "✅"/"❌"/"⚠️" in the
+# RAG retriever and ingest scripts) never crash on Windows. Under `uvicorn
+# --reload`, the worker's stdout is a pipe using the cp1252 locale encoding, so
+# `chcp 65001` on the console does not help — this does. errors="replace" is a
+# belt-and-suspenders guard against any other unencodable characters.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
